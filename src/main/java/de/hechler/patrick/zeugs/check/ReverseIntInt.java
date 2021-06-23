@@ -77,5 +77,20 @@ public class ReverseIntInt extends AbstractIntInt {
 	public void decSecond() {
 		reverse.decFirst();
 	}
+
+	@Override
+	public boolean isFirst(int val) {
+		return reverse.isSecond(val);
+	}
+
+	@Override
+	public boolean isSecond(int val) {
+		return reverse.isFirst(val);
+	}
+
+	@Override
+	public boolean bothSame() {
+		return reverse.bothSame();
+	}
 	
 }

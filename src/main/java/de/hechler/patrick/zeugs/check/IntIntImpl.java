@@ -87,4 +87,19 @@ public class IntIntImpl extends AbstractIntInt {
 		second -- ;
 	}
 	
+	@Override
+	public boolean isFirst(int val) {
+		return first == val;
+	}
+	
+	@Override
+	public boolean isSecond(int val) {
+		return second == val;
+	}
+	
+	@Override
+	public boolean bothSame() {
+		return first == second;
+	}
+	
 }

@@ -123,6 +123,33 @@ public interface IntInt extends Serializable, Comparable <IntInt> {
 	int compareFirstWithSecond();
 	
 	/**
+	 * returns <code>true</code> if the given value is the first value of this {@link IntInt} and <code>false</code> if not
+	 * 
+	 * @param val
+	 *            the value to be checked
+	 * @return true if the given value is the first value of this {@link IntInt} and <code>false</code> if not
+	 */
+	boolean isFirst(int val);
+	
+	/**
+	 * returns <code>true</code> if the given value is the second value of this {@link IntInt} and <code>false</code> if not
+	 * 
+	 * @param val
+	 *            the value to be checked
+	 * @return true if the given value is the second value of this {@link IntInt} and <code>false</code> if not
+	 */
+	boolean isSecond(int val);
+	
+	/**
+	 * returns <code>true</code> if the first value of this {@link IntInt} is the second value of this {@link IntInt} and <code>false</code> if not
+	 * 
+	 * @param val
+	 *            the value to be checked
+	 * @return <code>true</code> if the first value of this {@link IntInt} is the second value of this {@link IntInt} and <code>false</code> if not
+	 */
+	boolean bothSame();
+	
+	/**
 	 * returns a linked reverse {@link IntInt}
 	 * 
 	 * @return a linked reverse {@link IntInt}
