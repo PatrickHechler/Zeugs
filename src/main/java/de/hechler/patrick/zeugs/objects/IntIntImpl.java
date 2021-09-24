@@ -1,96 +1,105 @@
-package de.hechler.patrick.zeugs.check;
+package de.hechler.patrick.zeugs.objects;
 
 
-public class ReverseIntInt extends AbstractIntInt {
+public class IntIntImpl extends AbstractIntInt {
 	
 	/** UID */
-	private static final long serialVersionUID = 1516325567062312472L;
+	private static final long serialVersionUID = 5453701937308782579L;
 	
 	
 	
-	private final IntInt reverse;
+	private int first;
+	private int second;
 	
 	
 	
-	public ReverseIntInt(IntInt reverse) {
-		this.reverse = reverse;
+	public IntIntImpl() {
+		super();
+	}
+	
+	
+	
+	public IntIntImpl(int first, int second) {
+		super();
+		this.first = first;
+		this.second = second;
 	}
 	
 	
 	
 	@Override
 	public int getFirst() {
-		return reverse.getSecond();
+		return first;
 	}
 	
 	@Override
 	public int getSecond() {
-		return reverse.getFirst();
+		return second;
 	}
 	
 	@Override
 	public void setFirst(int newFirst) {
-		reverse.setSecond(newFirst);
+		first = newFirst;
 	}
 	
 	@Override
 	public void setSecond(int newsecond) {
-		reverse.setFirst(newsecond);
+		second = newsecond;
 	}
 	
 	@Override
 	public void addFirst(int add) {
-		reverse.addSecond(add);
+		first += add;
 	}
 	
 	@Override
 	public void addSecond(int add) {
-		reverse.addFirst(add);
+		second += add;
 	}
 	
 	@Override
 	public void subFirst(int sub) {
-		reverse.subSecond(sub);
+		first -= sub;
 	}
 	
 	@Override
 	public void subSecond(int sub) {
-		reverse.subFirst(sub);
+		second -= sub;
 	}
 	
 	@Override
 	public void incFirst() {
-		reverse.incSecond();
+		first ++ ;
 	}
 	
 	@Override
 	public void incSecond() {
-		reverse.incFirst();
+		second ++ ;
 	}
 	
 	@Override
 	public void decFirst() {
-		reverse.decSecond();
+		first -- ;
 	}
 	
 	@Override
 	public void decSecond() {
-		reverse.decFirst();
+		second -- ;
 	}
-
+	
 	@Override
 	public boolean isFirst(int val) {
-		return reverse.isSecond(val);
+		return first == val;
 	}
-
+	
 	@Override
 	public boolean isSecond(int val) {
-		return reverse.isFirst(val);
+		return second == val;
 	}
-
+	
 	@Override
 	public boolean bothSame() {
-		return reverse.bothSame();
+		return first == second;
 	}
 	
 }

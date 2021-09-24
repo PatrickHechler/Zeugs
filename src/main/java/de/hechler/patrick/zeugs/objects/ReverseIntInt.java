@@ -1,105 +1,97 @@
-package de.hechler.patrick.zeugs.check;
+package de.hechler.patrick.zeugs.objects;
 
+import de.hechler.patrick.zeugs.interfaces.IntInt;
 
-public class IntIntImpl extends AbstractIntInt {
+public class ReverseIntInt extends AbstractIntInt {
 	
 	/** UID */
-	private static final long serialVersionUID = 5453701937308782579L;
+	private static final long serialVersionUID = 1516325567062312472L;
 	
 	
 	
-	private int first;
-	private int second;
+	private final IntInt reverse;
 	
 	
 	
-	public IntIntImpl() {
-		super();
-	}
-	
-	
-	
-	public IntIntImpl(int first, int second) {
-		super();
-		this.first = first;
-		this.second = second;
+	public ReverseIntInt(IntInt reverse) {
+		this.reverse = reverse;
 	}
 	
 	
 	
 	@Override
 	public int getFirst() {
-		return first;
+		return reverse.getSecond();
 	}
 	
 	@Override
 	public int getSecond() {
-		return second;
+		return reverse.getFirst();
 	}
 	
 	@Override
 	public void setFirst(int newFirst) {
-		first = newFirst;
+		reverse.setSecond(newFirst);
 	}
 	
 	@Override
 	public void setSecond(int newsecond) {
-		second = newsecond;
+		reverse.setFirst(newsecond);
 	}
 	
 	@Override
 	public void addFirst(int add) {
-		first += add;
+		reverse.addSecond(add);
 	}
 	
 	@Override
 	public void addSecond(int add) {
-		second += add;
+		reverse.addFirst(add);
 	}
 	
 	@Override
 	public void subFirst(int sub) {
-		first -= sub;
+		reverse.subSecond(sub);
 	}
 	
 	@Override
 	public void subSecond(int sub) {
-		second -= sub;
+		reverse.subFirst(sub);
 	}
 	
 	@Override
 	public void incFirst() {
-		first ++ ;
+		reverse.incSecond();
 	}
 	
 	@Override
 	public void incSecond() {
-		second ++ ;
+		reverse.incFirst();
 	}
 	
 	@Override
 	public void decFirst() {
-		first -- ;
+		reverse.decSecond();
 	}
 	
 	@Override
 	public void decSecond() {
-		second -- ;
+		reverse.decFirst();
 	}
-	
+
 	@Override
 	public boolean isFirst(int val) {
-		return first == val;
+		return reverse.isSecond(val);
 	}
-	
+
 	@Override
 	public boolean isSecond(int val) {
-		return second == val;
+		return reverse.isFirst(val);
 	}
-	
+
 	@Override
 	public boolean bothSame() {
-		return first == second;
+		return reverse.bothSame();
 	}
 	
 }

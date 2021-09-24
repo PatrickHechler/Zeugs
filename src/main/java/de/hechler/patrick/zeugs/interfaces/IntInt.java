@@ -1,4 +1,4 @@
-package de.hechler.patrick.zeugs.check;
+package de.hechler.patrick.zeugs.interfaces;
 
 import java.io.Serializable;
 

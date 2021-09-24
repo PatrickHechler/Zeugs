@@ -1,7 +1,9 @@
-package de.hechler.patrick.zeugs.check;
+package de.hechler.patrick.zeugs.objects;
 
 import java.util.HashMap;
 import java.util.Map;
+
+import de.hechler.patrick.zeugs.interfaces.IntInt;
 
 public abstract class AbstractIntInt implements IntInt, Cloneable {
 	
