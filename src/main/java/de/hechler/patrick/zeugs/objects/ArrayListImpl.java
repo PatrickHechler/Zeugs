@@ -20,6 +20,7 @@ public class ArrayListImpl <E> implements List <E> {
 	private E[] arr;
 	
 	
+	
 	public ArrayListImpl(Class <E> cls, Collection <E> addAll) {
 		this(cls, addAll, 10, 10);
 	}
