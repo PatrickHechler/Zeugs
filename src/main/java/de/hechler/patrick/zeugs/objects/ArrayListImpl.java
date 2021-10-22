@@ -385,10 +385,10 @@ public class ArrayListImpl <E> implements List <E> {
 	
 	public class SubList implements List <E> {
 		
-		Consumer <Integer> incEstMod;
-		int estMod;
-		int from;
-		int to;
+		protected final Consumer <Integer> incEstMod;
+		protected int estMod;
+		protected final int from;
+		protected int to;
 		
 		
 		public SubList(int from, int to) {
@@ -772,7 +772,8 @@ public class ArrayListImpl <E> implements List <E> {
 		public List <E> subList(int fromIndex, int toIndex) {
 			estModCheck();
 			if (fromIndex > toIndex || fromIndex < 0 || toIndex > to - from) {
-				throw new IllegalArgumentException("");
+				throw new IllegalArgumentException(
+						"fromIndex=" + fromIndex + " toIndex=" + toIndex + " myFrom=" + this.from + " myTo=" + this.to + " mySize: " + (this.to - this.from));
 			}
 			final SubList sl = new SubList(fromIndex + from, toIndex + from, toAdd -> {
 				estMod ++ ;
@@ -782,7 +783,7 @@ public class ArrayListImpl <E> implements List <E> {
 			return sl;
 		}
 		
-		private void estModCheck() {
+		protected final void estModCheck() {
 			if (estMod != mod) {
 				throw new IllegalStateException("estMod=" + estMod + " mod=" + mod);
 			}
