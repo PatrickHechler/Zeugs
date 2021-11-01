@@ -31,5 +31,10 @@ public class Position2DImpl implements Position2D {
 		this.x = x;
 		this.y = y;
 	}
+
+	@Override
+	public boolean isChangeable() {
+		return true;
+	}
 	
 }
