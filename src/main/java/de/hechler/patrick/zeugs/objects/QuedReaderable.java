@@ -16,6 +16,10 @@ public class QuedReaderable implements Readable, Appendable {
 		this(new QueueImpl <>(), 0);
 	}
 	
+	public QuedReaderable(int timeout) {
+		this(new QueueImpl <>(), timeout);
+	}
+	
 	public QuedReaderable(int timeout, String... startelements) {
 		this(new QueueImpl <>(), timeout, (Object[]) startelements);
 	}
@@ -113,6 +117,61 @@ public class QuedReaderable implements Readable, Appendable {
 		return true;
 	}
 	
+	public void appendAtStart(CharSequence element) {
+		if (element == null) {
+			throw new NullPointerException("String element");
+		}
+		if (element.length() == 0) {
+			return;
+		}
+		appendAtStart0(element.toString().toCharArray());
+	}
+	
+	public void appendAtStart(String element) {
+		if (element == null) {
+			throw new NullPointerException("String element");
+		}
+		if (element.length() == 0) {
+			return;
+		}
+		appendAtStart0(element.toCharArray());
+	}
+	
+	public void appendAtStart(char[] element) {
+		if (element == null) {
+			throw new NullPointerException("char[] element");
+		}
+		if (element.length == 0) {
+			return;
+		}
+		appendAtStart0(element);
+	}
+	
+	public void appendAtStart(Readable element) {
+		if (element == null) {
+			throw new NullPointerException("Readable element");
+		}
+		appendAtStart0(element);
+	}
+	
+	private void appendAtStart0(Object element) {
+		if (this.timeout == -2 && this.buffer.isEmpty()) {
+			throw new IllegalStateException("already read the end!");
+		}
+		synchronized (this) {
+			Queue <Object> objs = new QueueImpl <>();
+			while ( !this.buffer.isEmpty()) {
+				Object rem = this.buffer.remove();
+				objs.add(rem);
+			}
+			this.buffer.add(element);
+			while ( !objs.isEmpty()) {
+				Object add = objs.remove();
+				this.buffer.add(add);
+			}
+		}
+	}
+	
 	public void appendEnd() {
 		synchronized (this) {
 			this.timeout = -2;
@@ -134,15 +193,30 @@ public class QuedReaderable implements Readable, Appendable {
 	
 	@Override
 	public int read(CharBuffer cb) throws IOException {
+		long now, start;
+		start = now = System.currentTimeMillis();
 		synchronized (this) {
 			while (true) {
 				Object element;
 				if (timeout >= 0 && buffer.isEmpty()) {
 					try {
-						this.wait(timeout);
+						now = System.currentTimeMillis();
+						if (timeout == 0) {
+							this.wait(0);
+						} else {
+							long realTimeout = timeout - (now - start);
+							if (realTimeout <= 0) {
+								throw new IOException("reached timeout");
+							}
+							this.wait(realTimeout);
+						}
+						continue;
 					} catch (InterruptedException e) {
 						e.printStackTrace();
 					}
+				}
+				if (buffer.isEmpty()) {
+					throw new IOException("reached timeout");
 				}
 				element = buffer.peek();
 				if (element == null) {
