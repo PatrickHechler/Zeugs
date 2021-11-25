@@ -4,15 +4,15 @@ import de.hechler.patrick.zeugs.interfaces.LongLong;
 
 public class LongLongOpenImpl implements LongLong {
 	
+	public long first;
+	public long second;
+	
 	
 	
 	public LongLongOpenImpl(long first, long second) {
 		this.first = first;
 		this.second = second;
 	}
-	
-	public long first;
-	public long second;
 	
 	
 	@Override
@@ -33,6 +33,11 @@ public class LongLongOpenImpl implements LongLong {
 	@Override
 	public void setSecond(long newVal) {
 		second = newVal;
+	}
+	
+	@Override
+	public String toString() {
+		return "LongLongOpenImpl [first=" + first + ", second=" + second + "]";
 	}
 	
 }
