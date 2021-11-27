@@ -34,7 +34,7 @@ public class NumberConvert {
 	
 	
 	public static byte[] longToByteArr(long val) {
-		byte[] bytes = new byte[4];
+		byte[] bytes = new byte[8];
 		longToByteArr(val, bytes, 0);
 		return bytes;
 	}
