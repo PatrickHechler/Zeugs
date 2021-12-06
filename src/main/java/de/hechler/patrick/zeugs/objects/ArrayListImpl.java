@@ -47,6 +47,10 @@ public class ArrayListImpl <E> implements List <E> {
 		this(cls, addAll, 10, 10);
 	}
 	
+	public ArrayListImpl(Class <E> cls, E[] addAll) {
+		this(cls, addAll, 10, 10);
+	}
+	
 	public ArrayListImpl(Class <E> cls, int grow, int initSize) {
 		this.mod = this.size = 0;
 		this.grow = grow;
@@ -57,9 +61,37 @@ public class ArrayListImpl <E> implements List <E> {
 		this.mod = 1;
 		this.grow = grow;
 		Object[] objs = addAll.toArray();
+		Class <?> objscompcls = objs.getClass().getComponentType();
+		if ( ( !objscompcls.isAssignableFrom(cls)) && !cls.isAssignableFrom(objscompcls)) {
+			throw new AssertionError();
+		}
 		int len = objs.length;
 		this.arr = Array.newInstance(cls, len + additionallInitSize);
 		System.arraycopy(objs, 0, arr, 0, len);
+		this.size = len;
+	}
+	
+	public ArrayListImpl(Class <E> cls, E[] addAll, int grow, int additionallInitSize) {
+		if (addAll.getClass().getComponentType() != cls) {
+			throw new AssertionError();
+		}
+		this.mod = 1;
+		this.grow = grow;
+		int len = addAll.length;
+		this.arr = Array.newInstance(cls, len + additionallInitSize);
+		System.arraycopy(addAll, 0, arr, 0, len);
+		this.size = len;
+	}
+	
+	public ArrayListImpl(Class <E> cls, Object addAll, int grow, int additionallInitSize) {
+		if (addAll.getClass().getComponentType() != cls) {
+			throw new AssertionError();
+		}
+		this.mod = 1;
+		this.grow = grow;
+		int len = Array.getLength(addAll);
+		this.arr = Array.newInstance(cls, len + additionallInitSize);
+		System.arraycopy(addAll, 0, arr, 0, len);
 		this.size = len;
 	}
 	
@@ -750,7 +782,7 @@ public class ArrayListImpl <E> implements List <E> {
 				throw new IndexOutOfBoundsException("index=" + index + " size=" + (to - from) + " from=" + from + " to=" + to);
 			}
 			E rem = ArrayListImpl.this.remove(this.from + index);
-			this.estMod ++;
+			this.estMod ++ ;
 			this.to -- ;
 			this.incEstMod.accept( -1);
 			return rem;
