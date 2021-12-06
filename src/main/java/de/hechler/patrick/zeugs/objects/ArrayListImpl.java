@@ -1,7 +1,6 @@
 package de.hechler.patrick.zeugs.objects;
 
 import java.lang.reflect.Array;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -12,39 +11,56 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.function.Consumer;
 
+import javax.lang.model.type.PrimitiveType;
+
+@SuppressWarnings("unchecked")
 public class ArrayListImpl <E> implements List <E> {
 	
-	private int grow;
-	private int mod;
-	private int size;
-	private E[] arr;
+	/**
+	 * the additional size, the {@link #arr} grows every time it runs out of space.
+	 */
+	private final int grow;
+	/**
+	 * the number of modifications, used for fail-fast policy
+	 */
+	private int       mod;
+	/**
+	 * the size of this {@link List}.<br>
+	 * it is sure, that {@link #arr} as a length of at least this variable.<br>
+	 * {@link #size} can never be negative.<br>
+	 * the elements of {@link #arr} from {@code 0} to {@link #size} are the elements contained by this {@link List}
+	 */
+	private int       size;
+	/**
+	 * the array of all data saved by this list.<br>
+	 * this {@link Array} must be an {@link Object}, because it can also be an {@link Array} of {@link PrimitiveType}s.
+	 */
+	private Object    arr;
 	
 	
-	
-	public ArrayListImpl(Class <E> cls, Collection <E> addAll) {
-		this(cls, addAll, 10, 10);
-	}
-	
-	@SuppressWarnings("unchecked")
-	public ArrayListImpl(Class <E> cls, Collection <E> addAll, int grow, int additionallInitSize) {
-		this.mod = 1;
-		this.grow = grow;
-		Object[] objs = addAll.toArray();
-		int len = objs.length;
-		this.arr = (E[]) Array.newInstance(cls, len + additionallInitSize);
-		System.arraycopy(objs, 0, arr, 0, len);
-		this.size = len;
-	}
 	
 	public ArrayListImpl(Class <E> cls) {
 		this(cls, 10, 10);
 	}
 	
-	@SuppressWarnings("unchecked")
+	public ArrayListImpl(Class <E> cls, Collection <E> addAll) {
+		this(cls, addAll, 10, 10);
+	}
+	
 	public ArrayListImpl(Class <E> cls, int grow, int initSize) {
 		this.mod = this.size = 0;
 		this.grow = grow;
-		this.arr = (E[]) Array.newInstance(cls, initSize);
+		this.arr = Array.newInstance(cls, initSize);
+	}
+	
+	public ArrayListImpl(Class <E> cls, Collection <E> addAll, int grow, int additionallInitSize) {
+		this.mod = 1;
+		this.grow = grow;
+		Object[] objs = addAll.toArray();
+		int len = objs.length;
+		this.arr = Array.newInstance(cls, len + additionallInitSize);
+		System.arraycopy(objs, 0, arr, 0, len);
+		this.size = len;
 	}
 	
 	@Override
@@ -60,7 +76,7 @@ public class ArrayListImpl <E> implements List <E> {
 	@Override
 	public boolean contains(Object o) {
 		for (int i = 0; i < size; i ++ ) {
-			if (Objects.equals(o, arr[i])) {
+			if (Objects.equals(o, Array.get(arr, i))) {
 				return true;
 			}
 		}
@@ -74,9 +90,9 @@ public class ArrayListImpl <E> implements List <E> {
 	
 	public class Iter implements ListIterator <E> {
 		
-		int i;
-		int estMod = mod;
-		Boolean next;
+		protected int     i;
+		protected int     estMod = mod;
+		protected Boolean next;
 		
 		
 		public Iter() {
@@ -100,7 +116,7 @@ public class ArrayListImpl <E> implements List <E> {
 				throw new NoSuchElementException("nextI=" + i + " size=" + size);
 			}
 			next = true;
-			return arr[i ++ ];
+			return (E) Array.get(arr, i ++ );
 		}
 		
 		@Override
@@ -130,7 +146,7 @@ public class ArrayListImpl <E> implements List <E> {
 				throw new NoSuchElementException("prevI=" + (i - 1));
 			}
 			next = false;
-			return arr[ -- i];
+			return (E) Array.get(arr, -- i);
 		}
 		
 		@Override
@@ -177,13 +193,21 @@ public class ArrayListImpl <E> implements List <E> {
 	
 	@Override
 	public Object[] toArray() {
+		if ( !arr.getClass().getComponentType().isPrimitive()) {
+			return (Object[]) toTypeArray();
+		}
 		Object[] a = new Object[size];
 		System.arraycopy(arr, 0, a, 0, size);
 		return a;
 	}
 	
+	public Object toTypeArray() {
+		Object a = Array.newInstance(arr.getClass().getComponentType(), size);
+		System.arraycopy(arr, 0, a, 0, size);
+		return a;
+	}
+	
 	@Override
-	@SuppressWarnings("unchecked")
 	public <T> T[] toArray(T[] a) {
 		if (a.length < size) {
 			a = (T[]) Array.newInstance(a.getClass().getComponentType(), size);
@@ -196,17 +220,17 @@ public class ArrayListImpl <E> implements List <E> {
 	
 	@Override
 	public boolean add(E e) {
-		if (size <= arr.length) {
-			arr = Arrays.copyOf(arr, arr.length + grow + 1);
+		if (size <= Array.getLength(arr)) {
+			grow(Array.getLength(arr) + grow + 1);
 		}
-		arr[size ++ ] = e;
+		Array.set(arr, size ++ , e);
 		return true;
 	}
 	
 	@Override
 	public boolean remove(Object o) {
 		for (int i = 0; i < size; i ++ ) {
-			if (Objects.equals(o, arr[i])) {
+			if (Objects.equals(o, Array.get(arr, i))) {
 				System.arraycopy(arr, i + 1, arr, i, size - i);
 				return true;
 			}
@@ -231,8 +255,8 @@ public class ArrayListImpl <E> implements List <E> {
 		if (nonempty) {
 			this.mod ++ ;
 		}
-		if (add.length + size > arr.length) {
-			arr = Arrays.copyOf(arr, size + grow + add.length);
+		if (add.length + size > Array.getLength(arr)) {
+			grow(size + grow + add.length);
 		}
 		System.arraycopy(add, 0, arr, size, add.length);
 		size += add.length;
@@ -246,8 +270,8 @@ public class ArrayListImpl <E> implements List <E> {
 		if (nonempty) {
 			this.mod ++ ;
 		}
-		if (add.length + size > arr.length) {
-			arr = Arrays.copyOf(arr, size + grow + add.length);
+		if (add.length + size > Array.getLength(arr)) {
+			grow(size + grow + add.length);
 		}
 		System.arraycopy(arr, index, arr, index + add.length, add.length);
 		System.arraycopy(add, 0, arr, index, add.length);
@@ -260,8 +284,8 @@ public class ArrayListImpl <E> implements List <E> {
 		if (nonempty) {
 			this.mod ++ ;
 		}
-		if (add.length + size > arr.length) {
-			arr = Arrays.copyOf(arr, size + grow + add.length);
+		if (add.length + size > Array.getLength(arr)) {
+			grow(size + grow + add.length);
 		}
 		System.arraycopy(arr, index, arr, index + add.length, add.length);
 		System.arraycopy(add, 0, arr, index, add.length);
@@ -307,7 +331,7 @@ public class ArrayListImpl <E> implements List <E> {
 		if (index > size || index < 0) {
 			throw new IndexOutOfBoundsException("index=" + index + " len=" + size);
 		}
-		return arr[index];
+		return (E) Array.get(arr, index);
 	}
 	
 	@Override
@@ -316,8 +340,8 @@ public class ArrayListImpl <E> implements List <E> {
 			throw new IndexOutOfBoundsException("index=" + index + " len=" + size);
 		}
 		mod ++ ;
-		E old = arr[index];
-		arr[index] = element;
+		E old = (E) Array.get(arr, index);
+		Array.set(arr, index, element);
 		return old;
 	}
 	
@@ -326,12 +350,12 @@ public class ArrayListImpl <E> implements List <E> {
 		if (index > size || index < 0) {
 			throw new IndexOutOfBoundsException("index=" + index + " len=" + size);
 		}
-		if (size >= arr.length) {
-			arr = Arrays.copyOf(arr, size + grow + 1);
+		if (size >= Array.getLength(arr)) {
+			grow(size + grow + 1);
 		}
 		mod ++ ;
 		System.arraycopy(arr, index, arr, index + 1, size - index);
-		arr[index] = element;
+		Array.set(arr, index, element);
 	}
 	
 	@Override
@@ -340,9 +364,9 @@ public class ArrayListImpl <E> implements List <E> {
 			throw new IndexOutOfBoundsException("index=" + index + " len=" + size);
 		}
 		mod ++ ;
-		E e = arr[index];
+		Object e = Array.get(arr, index);
 		System.arraycopy(arr, index + 1, arr, index, size - index);
-		return e;
+		return (E) e;
 	}
 	
 	@Override
@@ -386,14 +410,13 @@ public class ArrayListImpl <E> implements List <E> {
 	public class SubList implements List <E> {
 		
 		protected final Consumer <Integer> incEstMod;
-		protected int estMod;
-		protected final int from;
-		protected int to;
+		protected int                      estMod;
+		protected final int                from;
+		protected int                      to;
 		
 		
 		public SubList(int from, int to) {
-			incEstMod = i -> {
-			};
+			incEstMod = i -> {};
 			estMod = mod;
 			this.from = from;
 			this.to = from;
@@ -422,7 +445,7 @@ public class ArrayListImpl <E> implements List <E> {
 		public boolean contains(Object o) {
 			estModCheck();
 			for (int i = from; i < to; i ++ ) {
-				if (Objects.equals(o, arr[i])) {
+				if (Objects.equals(o, Array.get(arr, i))) {
 					return true;
 				}
 			}
@@ -438,9 +461,9 @@ public class ArrayListImpl <E> implements List <E> {
 		public class SubIter implements ListIterator <E> {
 			
 			
-			int i;
-			int subEstMod = SubList.this.estMod;
-			Boolean next;
+			protected int     i;
+			protected int     subEstMod = SubList.this.estMod;
+			protected Boolean next;
 			
 			
 			public SubIter() {
@@ -464,7 +487,7 @@ public class ArrayListImpl <E> implements List <E> {
 					throw new NoSuchElementException("nextI=" + this.i + " size=" + (SubList.this.to - SubList.this.from));
 				}
 				this.next = true;
-				return ArrayListImpl.this.arr[i ++ ];
+				return (E) Array.get(ArrayListImpl.this.arr, i ++ );
 			}
 			
 			@Override
@@ -497,7 +520,7 @@ public class ArrayListImpl <E> implements List <E> {
 					throw new NoSuchElementException("prevI=" + (i - 1));
 				}
 				this.next = false;
-				return ArrayListImpl.this.arr[ -- this.i];
+				return (E) Array.get(ArrayListImpl.this.arr, -- this.i);
 			}
 			
 			@Override
@@ -562,7 +585,6 @@ public class ArrayListImpl <E> implements List <E> {
 		}
 		
 		@Override
-		@SuppressWarnings("unchecked")
 		public <T> T[] toArray(T[] a) {
 			estModCheck();
 			int len = from - to;
@@ -589,7 +611,7 @@ public class ArrayListImpl <E> implements List <E> {
 		public boolean remove(Object o) {
 			estModCheck();
 			for (int i = from; i < to; i ++ ) {
-				if (Objects.equals(o, arr[i])) {
+				if (Objects.equals(o, Array.get(arr, i))) {
 					ArrayListImpl.this.remove(i);
 					to -- ;
 					estMod ++ ;
@@ -610,7 +632,7 @@ public class ArrayListImpl <E> implements List <E> {
 				c = new HashSet <>(c);
 			}
 			for (int i = this.from; i < this.to; i ++ ) {
-				if (c.remove(ArrayListImpl.this.arr[i])) {
+				if (c.remove(Array.get(ArrayListImpl.this.arr, i))) {
 					if (c.isEmpty()) {
 						return true;
 					}
@@ -651,7 +673,7 @@ public class ArrayListImpl <E> implements List <E> {
 			estModCheck();
 			int sub = 0;
 			for (int i = this.from; i < this.to; i ++ ) {
-				if (c.contains(ArrayListImpl.this.arr[i])) {
+				if (c.contains(Array.get(ArrayListImpl.this.arr, i))) {
 					ArrayListImpl.this.remove(i);
 					this.estMod ++ ;
 					sub -- ;
@@ -667,7 +689,7 @@ public class ArrayListImpl <E> implements List <E> {
 			estModCheck();
 			int sub = 0;
 			for (int i = this.from; i < this.to; i ++ ) {
-				if ( !c.contains(ArrayListImpl.this.arr[i])) {
+				if ( !c.contains(Array.get(ArrayListImpl.this.arr, i))) {
 					ArrayListImpl.this.remove(i);
 					this.estMod ++ ;
 					sub -- ;
@@ -728,7 +750,7 @@ public class ArrayListImpl <E> implements List <E> {
 				throw new IndexOutOfBoundsException("index=" + index + " size=" + (to - from) + " from=" + from + " to=" + to);
 			}
 			E rem = ArrayListImpl.this.remove(this.from + index);
-			this.estMod -- ;
+			this.estMod ++;
 			this.to -- ;
 			this.incEstMod.accept( -1);
 			return rem;
@@ -738,7 +760,7 @@ public class ArrayListImpl <E> implements List <E> {
 		public int indexOf(Object o) {
 			estModCheck();
 			for (int i = from; i < to; i ++ ) {
-				if (Objects.equals(o, arr[i])) {
+				if (Objects.equals(o, Array.get(arr, i))) {
 					return i - from;
 				}
 			}
@@ -749,7 +771,7 @@ public class ArrayListImpl <E> implements List <E> {
 		public int lastIndexOf(Object o) {
 			estModCheck();
 			for (int i = to - 1; i >= from; i ++ ) {
-				if (Objects.equals(o, arr[i])) {
+				if (Objects.equals(o, Array.get(arr, i))) {
 					return i - from;
 				}
 			}
@@ -773,14 +795,14 @@ public class ArrayListImpl <E> implements List <E> {
 			estModCheck();
 			if (fromIndex > toIndex || fromIndex < 0 || toIndex > to - from) {
 				throw new IllegalArgumentException(
-						"fromIndex=" + fromIndex + " toIndex=" + toIndex + " myFrom=" + this.from + " myTo=" + this.to + " mySize: " + (this.to - this.from));
+					"fromIndex=" + fromIndex + " toIndex=" + toIndex + " myFrom=" + this.from + " myTo=" + this.to + " mySize: " + (this.to - this.from));
 			}
-			final SubList sl = new SubList(fromIndex + from, toIndex + from, toAdd -> {
+			Consumer <Integer> toChange = toAdd -> {
 				estMod ++ ;
 				to += toAdd;
 				incEstMod.accept(toAdd);
-			});
-			return sl;
+			};
+			return new SubList(fromIndex + from, toIndex + from, toChange);
 		}
 		
 		protected final void estModCheck() {
@@ -795,9 +817,11 @@ public class ArrayListImpl <E> implements List <E> {
 	public String toString() {
 		StringBuilder build = new StringBuilder("[");
 		if (size > 0) {
-			build.append(arr[0]);
-			for (Iter iter = new Iter(1); iter.hasNext();) {
-				build.append(", ").append(arr[0]);
+			build.append(Array.get(arr, 0));
+			final int len = Array.getLength(arr);
+			for (int i = 1; i < len; i ++ ) {
+				E e = (E) Array.get(arr, i);
+				build.append(", ").append(e);
 			}
 		}
 		return build.append("]").toString();
@@ -807,8 +831,9 @@ public class ArrayListImpl <E> implements List <E> {
 	public int hashCode() {
 		final int prime = 31;
 		int result = 1;
-		for (Iter iter = new Iter(); iter.hasNext();) {
-			E e = iter.next();
+		final int len = Array.getLength(arr);
+		for (int i = 0; i < len; i ++ ) {
+			E e = (E) Array.get(arr, i);
 			result = prime * result + (e == null ? 0 : e.hashCode());
 		}
 		result = prime * result + size;
@@ -819,15 +844,41 @@ public class ArrayListImpl <E> implements List <E> {
 	public boolean equals(Object obj) {
 		if (this == obj) return true;
 		if (obj == null) return false;
-		if (getClass() != obj.getClass()) return false;
-		ArrayListImpl <?> other = (ArrayListImpl <?>) obj;
-		if (size != other.size) return false;
-		for (int i = 0; i < size; i ++ ) {
-			if ( !Objects.equals(arr[i], other.arr[i])) {
-				return false;
+		if ( ! (obj instanceof List <?>)) return false;
+		if (obj instanceof ArrayListImpl) {
+			ArrayListImpl <?> other = (ArrayListImpl <?>) obj;
+			if (size != other.size) return false;
+			for (int i = 0; i < size; i ++ ) {
+				if ( !Objects.equals(Array.get(arr, i), Array.get(other.arr, i))) {
+					return false;
+				}
 			}
+		} else {
+			List <?> other = (List <?>) obj;
+			if (size != other.size()) return false;
+			int i = 0;
+			for (Object o : other) {
+				if (i >= size) return false;
+				else if ( !Objects.equals(Array.get(arr, i), o)) return false;
+			}
+			if (i != size) return false;
 		}
 		return true;
+	}
+	
+	private void grow(int newlen) {
+		Class <?> compcls = arr.getClass().getComponentType();
+		int oldlen = Array.getLength(arr);
+		Object newarr = Array.newInstance(compcls, newlen);
+		System.arraycopy(arr, 0, newarr, 0, oldlen);
+		arr = newarr;
+	}
+	
+	public void ensureCapacity(int minSize) {
+		int mylen = Array.getLength(arr);
+		if (mylen < minSize) {
+			grow(minSize);
+		}
 	}
 	
 }
