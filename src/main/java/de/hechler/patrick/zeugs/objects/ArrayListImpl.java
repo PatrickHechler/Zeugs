@@ -1,5 +1,6 @@
 package de.hechler.patrick.zeugs.objects;
 
+import java.io.Serializable;
 import java.lang.reflect.Array;
 import java.util.Collection;
 import java.util.HashSet;
@@ -8,34 +9,38 @@ import java.util.List;
 import java.util.ListIterator;
 import java.util.NoSuchElementException;
 import java.util.Objects;
+import java.util.RandomAccess;
 import java.util.Set;
 import java.util.function.Consumer;
 
 import javax.lang.model.type.PrimitiveType;
 
 @SuppressWarnings("unchecked")
-public class ArrayListImpl <E> implements List <E> {
+public class ArrayListImpl <E> implements List <E>, RandomAccess, Serializable, Cloneable {
+	
+	/** UID */
+	private static final long serialVersionUID = -8691316003621125106L;
 	
 	/**
-	 * the minimal  size, the {@link #arr} grows every time it runs out of space.
+	 * the minimal size, the {@link #arr} grows every time it runs out of space.
 	 */
-	private final int mingrow;
+	private final int     mingrow;
 	/**
 	 * the number of modifications, used for fail-fast policy
 	 */
-	private int       mod;
+	private transient int mod;
 	/**
 	 * the size of this {@link List}.<br>
 	 * it is sure, that {@link #arr} as a length of at least this variable.<br>
 	 * {@link #size} can never be negative.<br>
 	 * the elements of {@link #arr} from {@code 0} to {@link #size} are the elements contained by this {@link List}
 	 */
-	private int       size;
+	private int           size;
 	/**
 	 * the array of all data saved by this list.<br>
 	 * this {@link Array} must be an {@link Object}, because it can also be an {@link Array} of {@link PrimitiveType}s.
 	 */
-	private Object    arr;
+	private Object        arr;
 	
 	
 	
@@ -852,6 +857,20 @@ public class ArrayListImpl <E> implements List <E> {
 		
 	}
 	
+	private void grow(int newlen, int oldlen) {
+		Class <?> compcls = arr.getClass().getComponentType();
+		Object newarr = Array.newInstance(compcls, newlen);
+		System.arraycopy(arr, 0, newarr, 0, oldlen);
+		arr = newarr;
+	}
+	
+	public void ensureCapacity(int minSize) {
+		int mylen = Array.getLength(arr);
+		if (mylen < minSize) {
+			grow(minSize, mylen);
+		}
+	}
+	
 	@Override
 	public String toString() {
 		StringBuilder build = new StringBuilder("[");
@@ -905,17 +924,17 @@ public class ArrayListImpl <E> implements List <E> {
 		return true;
 	}
 	
-	private void grow(int newlen, int oldlen) {
-		Class <?> compcls = arr.getClass().getComponentType();
-		Object newarr = Array.newInstance(compcls, newlen);
-		System.arraycopy(arr, 0, newarr, 0, oldlen);
-		arr = newarr;
-	}
-	
-	public void ensureCapacity(int minSize) {
-		int mylen = Array.getLength(arr);
-		if (mylen < minSize) {
-			grow(minSize, mylen);
+	@Override
+	protected ArrayListImpl <E> clone() {
+		try {
+			ArrayListImpl <E> clone = (ArrayListImpl <E>) super.clone();
+			clone.size = size;
+			int len = Array.getLength(arr);
+			clone.arr = Array.newInstance(arr.getClass().getComponentType(), len);
+			System.arraycopy(arr, 0, clone.arr, 0, size);
+			return clone;
+		} catch (CloneNotSupportedException e) {
+			throw new InternalError(e);
 		}
 	}
 	
