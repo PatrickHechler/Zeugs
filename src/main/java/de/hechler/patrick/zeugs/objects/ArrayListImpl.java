@@ -259,8 +259,7 @@ public class ArrayListImpl <E> implements List <E>, RandomAccess, Serializable, 
 	public boolean add(E e) {
 		int arrlen = Array.getLength(arr);
 		if (size <= arrlen) {
-			final int halfsize = size >> 1;
-			grow(size + mingrow > halfsize ? mingrow : halfsize, arrlen);
+			grow(arrlen, size + mingrow);
 		}
 		Array.set(arr, size ++ , e);
 		return true;
@@ -296,7 +295,7 @@ public class ArrayListImpl <E> implements List <E>, RandomAccess, Serializable, 
 		}
 		int arrlen = Array.getLength(arr);
 		if (add.length + size > arrlen) {
-			grow(size + add.length > mingrow ? add.length + mingrow >> 1 : mingrow, arrlen);
+			grow(arrlen, size + add.length);
 		}
 		System.arraycopy(add, 0, arr, size, add.length);
 		size += add.length;
@@ -312,7 +311,7 @@ public class ArrayListImpl <E> implements List <E>, RandomAccess, Serializable, 
 		}
 		int arrlen = Array.getLength(arr);
 		if (add.length + size > arrlen) {
-			grow(size + add.length > mingrow ? add.length + mingrow >> 1 : mingrow, arrlen);
+			grow(arrlen, size + add.length);
 		}
 		System.arraycopy(arr, index, arr, index + add.length, add.length);
 		System.arraycopy(add, 0, arr, index, add.length);
@@ -327,7 +326,7 @@ public class ArrayListImpl <E> implements List <E>, RandomAccess, Serializable, 
 		}
 		int arrlen = Array.getLength(arr);
 		if (add.length + size > arrlen) {
-			grow(size + add.length > mingrow ? add.length + mingrow >> 1 : mingrow, arrlen);
+			grow(arrlen, size + add.length);
 		}
 		System.arraycopy(arr, index, arr, index + add.length, add.length);
 		System.arraycopy(add, 0, arr, index, add.length);
@@ -394,8 +393,7 @@ public class ArrayListImpl <E> implements List <E>, RandomAccess, Serializable, 
 		}
 		int arrlen = Array.getLength(arr);
 		if (size >= arrlen) {
-			final int halfsize = size >> 1;
-			grow(size + mingrow > halfsize ? mingrow : halfsize, arrlen);
+			grow(arrlen, size + 1);
 		}
 		mod ++ ;
 		System.arraycopy(arr, index, arr, index + 1, size - index);
@@ -857,9 +855,10 @@ public class ArrayListImpl <E> implements List <E>, RandomAccess, Serializable, 
 		
 	}
 	
-	private void grow(int newlen, int oldlen) {
+	private void grow(int minnewlen, int oldlen) {
+		minnewlen = Math.max(oldlen + Math.max(oldlen >> 1, mingrow), minnewlen);
 		Class <?> compcls = arr.getClass().getComponentType();
-		Object newarr = Array.newInstance(compcls, newlen);
+		Object newarr = Array.newInstance(compcls, minnewlen);
 		System.arraycopy(arr, 0, newarr, 0, oldlen);
 		arr = newarr;
 	}
@@ -867,7 +866,7 @@ public class ArrayListImpl <E> implements List <E>, RandomAccess, Serializable, 
 	public void ensureCapacity(int minSize) {
 		int mylen = Array.getLength(arr);
 		if (mylen < minSize) {
-			grow(minSize, mylen);
+			grow(mylen, minSize);
 		}
 	}
 	
