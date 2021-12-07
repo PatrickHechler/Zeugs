@@ -17,9 +17,9 @@ import javax.lang.model.type.PrimitiveType;
 public class ArrayListImpl <E> implements List <E> {
 	
 	/**
-	 * the additional size, the {@link #arr} grows every time it runs out of space.
+	 * the minimal  size, the {@link #arr} grows every time it runs out of space.
 	 */
-	private final int grow;
+	private final int mingrow;
 	/**
 	 * the number of modifications, used for fail-fast policy
 	 */
@@ -51,15 +51,15 @@ public class ArrayListImpl <E> implements List <E> {
 		this(cls, addAll, 10, 10);
 	}
 	
-	public ArrayListImpl(Class <E> cls, int grow, int initSize) {
+	public ArrayListImpl(Class <E> cls, int mingrow, int initSize) {
 		this.mod = this.size = 0;
-		this.grow = grow;
+		this.mingrow = mingrow >= 0 ? 1 : mingrow;
 		this.arr = Array.newInstance(cls, initSize);
 	}
 	
-	public ArrayListImpl(Class <E> cls, Collection <E> addAll, int grow, int additionallInitSize) {
+	public ArrayListImpl(Class <E> cls, Collection <E> addAll, int mingrow, int additionallInitSize) {
 		this.mod = 1;
-		this.grow = grow;
+		this.mingrow = mingrow >= 0 ? 1 : mingrow;
 		Object[] objs = addAll.toArray();
 		Class <?> objscompcls = objs.getClass().getComponentType();
 		if ( ( !objscompcls.isAssignableFrom(cls)) && !cls.isAssignableFrom(objscompcls)) {
@@ -71,24 +71,24 @@ public class ArrayListImpl <E> implements List <E> {
 		this.size = len;
 	}
 	
-	public ArrayListImpl(Class <E> cls, E[] addAll, int grow, int additionallInitSize) {
+	public ArrayListImpl(Class <E> cls, E[] addAll, int mingrow, int additionallInitSize) {
 		if (addAll.getClass().getComponentType() != cls) {
 			throw new AssertionError();
 		}
 		this.mod = 1;
-		this.grow = grow;
+		this.mingrow = mingrow >= 0 ? 1 : mingrow;
 		int len = addAll.length;
 		this.arr = Array.newInstance(cls, len + additionallInitSize);
 		System.arraycopy(addAll, 0, arr, 0, len);
 		this.size = len;
 	}
 	
-	public ArrayListImpl(Class <E> cls, Object addAll, int grow, int additionallInitSize) {
+	public ArrayListImpl(Class <E> cls, Object addAll, int mingrow, int additionallInitSize) {
 		if (addAll.getClass().getComponentType() != cls) {
 			throw new AssertionError();
 		}
 		this.mod = 1;
-		this.grow = grow;
+		this.mingrow = mingrow;
 		int len = Array.getLength(addAll);
 		this.arr = Array.newInstance(cls, len + additionallInitSize);
 		System.arraycopy(addAll, 0, arr, 0, len);
@@ -252,8 +252,10 @@ public class ArrayListImpl <E> implements List <E> {
 	
 	@Override
 	public boolean add(E e) {
-		if (size <= Array.getLength(arr)) {
-			grow(Array.getLength(arr) + grow + 1);
+		int arrlen = Array.getLength(arr);
+		if (size <= arrlen) {
+			final int halfsize = size >> 1;
+			grow(size + mingrow > halfsize ? mingrow : halfsize, arrlen);
 		}
 		Array.set(arr, size ++ , e);
 		return true;
@@ -287,8 +289,9 @@ public class ArrayListImpl <E> implements List <E> {
 		if (nonempty) {
 			this.mod ++ ;
 		}
-		if (add.length + size > Array.getLength(arr)) {
-			grow(size + grow + add.length);
+		int arrlen = Array.getLength(arr);
+		if (add.length + size > arrlen) {
+			grow(size + add.length > mingrow ? add.length + mingrow >> 1 : mingrow, arrlen);
 		}
 		System.arraycopy(add, 0, arr, size, add.length);
 		size += add.length;
@@ -302,8 +305,9 @@ public class ArrayListImpl <E> implements List <E> {
 		if (nonempty) {
 			this.mod ++ ;
 		}
-		if (add.length + size > Array.getLength(arr)) {
-			grow(size + grow + add.length);
+		int arrlen = Array.getLength(arr);
+		if (add.length + size > arrlen) {
+			grow(size + add.length > mingrow ? add.length + mingrow >> 1 : mingrow, arrlen);
 		}
 		System.arraycopy(arr, index, arr, index + add.length, add.length);
 		System.arraycopy(add, 0, arr, index, add.length);
@@ -316,8 +320,9 @@ public class ArrayListImpl <E> implements List <E> {
 		if (nonempty) {
 			this.mod ++ ;
 		}
-		if (add.length + size > Array.getLength(arr)) {
-			grow(size + grow + add.length);
+		int arrlen = Array.getLength(arr);
+		if (add.length + size > arrlen) {
+			grow(size + add.length > mingrow ? add.length + mingrow >> 1 : mingrow, arrlen);
 		}
 		System.arraycopy(arr, index, arr, index + add.length, add.length);
 		System.arraycopy(add, 0, arr, index, add.length);
@@ -382,8 +387,10 @@ public class ArrayListImpl <E> implements List <E> {
 		if (index > size || index < 0) {
 			throw new IndexOutOfBoundsException("index=" + index + " len=" + size);
 		}
-		if (size >= Array.getLength(arr)) {
-			grow(size + grow + 1);
+		int arrlen = Array.getLength(arr);
+		if (size >= arrlen) {
+			final int halfsize = size >> 1;
+			grow(size + mingrow > halfsize ? mingrow : halfsize, arrlen);
 		}
 		mod ++ ;
 		System.arraycopy(arr, index, arr, index + 1, size - index);
@@ -898,9 +905,8 @@ public class ArrayListImpl <E> implements List <E> {
 		return true;
 	}
 	
-	private void grow(int newlen) {
+	private void grow(int newlen, int oldlen) {
 		Class <?> compcls = arr.getClass().getComponentType();
-		int oldlen = Array.getLength(arr);
 		Object newarr = Array.newInstance(compcls, newlen);
 		System.arraycopy(arr, 0, newarr, 0, oldlen);
 		arr = newarr;
@@ -909,7 +915,7 @@ public class ArrayListImpl <E> implements List <E> {
 	public void ensureCapacity(int minSize) {
 		int mylen = Array.getLength(arr);
 		if (mylen < minSize) {
-			grow(minSize);
+			grow(minSize, mylen);
 		}
 	}
 	
