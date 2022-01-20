@@ -855,7 +855,7 @@ public class ArrayListImpl <E> implements List <E>, RandomAccess, Serializable, 
 		
 	}
 	
-	private void grow(int minnewlen, int oldlen) {
+	private void grow(int oldlen, int minnewlen) {
 		minnewlen = Math.max(oldlen + Math.max(oldlen >> 1, mingrow), minnewlen);
 		Class <?> compcls = arr.getClass().getComponentType();
 		Object newarr = Array.newInstance(compcls, minnewlen);
