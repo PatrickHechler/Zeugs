@@ -208,8 +208,8 @@ public class PatrLogger extends Logger implements Closeable, Serializable {
 		return addChild(out, cname, lineSep);
 	}
 	
-	public PatrLogger addChild(PrintStream out, String name, String postfix) {
-		PatrLogger c = new PatrLogger(out, this.name + '.' + name, resourceBundleName, postfix);
+	public PatrLogger addChild(PrintStream out, String name, String lineSep) {
+		PatrLogger c = new PatrLogger(out, this.name + '.' + name, resourceBundleName, lineSep);
 		c.setParent(this);
 		this.childs.add(c);
 		return c;
