@@ -101,8 +101,9 @@ public class PatrLogger extends Logger implements Closeable, Serializable {
 		// only allow init
 		if (this.parent != super.getParent() && parent == this.parent) {
 			super.setParent(parent);
+		} else {
+			throw new UnsupportedOperationException("setParent(parent) parent=" + parent);
 		}
-		throw new UnsupportedOperationException("setParent(parent) parent=" + parent);
 	}
 	
 	@Override
@@ -187,7 +188,7 @@ public class PatrLogger extends Logger implements Closeable, Serializable {
 	
 	private void log(String[] lines) {
 		for (String line : lines) {
-			out.print("[" + name + "]:" + line + lineSep);
+			out.print("[" + name + "]: " + line + lineSep);
 		}
 	}
 	
@@ -209,7 +210,7 @@ public class PatrLogger extends Logger implements Closeable, Serializable {
 	}
 	
 	public PatrLogger addChild(PrintStream out, String name, String lineSep) {
-		PatrLogger c = new PatrLogger(out, this.name + '.' + name, resourceBundleName, lineSep);
+		PatrLogger c = new PatrLogger(out, this.name + '.' + name, resourceBundleName, lineSep, this);
 		c.setParent(this);
 		this.childs.add(c);
 		return c;
